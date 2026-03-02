@@ -1,0 +1,66 @@
+<svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 메인 그라데이션 (보라→핑크) -->
+    <linearGradient id="pinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    
+    <!-- 하트 그라데이션 (밝은 핑크) -->
+    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDF2F8" />
+      <stop offset="100%" stop-color="#FCE7F3" />
+    </linearGradient>
+
+    <!-- 좌표선 그라데이션 -->
+    <linearGradient id="gridGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E9D5FF" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#FBCFE8" stop-opacity="0.3" />
+    </linearGradient>
+  </defs>
+
+  <!-- 좌표 격자선 (X축) -->
+  <line x1="10" y1="50" x2="90" y2="50" stroke="url(#gridGradient)" stroke-width="1.5" stroke-dasharray="4 3" />
+  <!-- 좌표 격자선 (Y축) -->
+  <line x1="50" y1="10" x2="50" y2="90" stroke="url(#gridGradient)" stroke-width="1.5" stroke-dasharray="4 3" />
+
+  <!-- 작은 좌표점들 -->
+  <circle cx="30" cy="30" r="1.5" fill="#E9D5FF" opacity="0.6" />
+  <circle cx="70" cy="30" r="1.5" fill="#FBCFE8" opacity="0.6" />
+  <circle cx="30" cy="70" r="1.5" fill="#FBCFE8" opacity="0.6" />
+  <circle cx="70" cy="70" r="1.5" fill="#E9D5FF" opacity="0.6" />
+
+  <!-- 메인 지도 핀 -->
+  <g transform="translate(50, 35)">
+    <!-- 핀 그림자 -->
+    <ellipse cx="0" cy="40" rx="8" ry="3" fill="black" opacity="0.15" />
+    
+    <!-- 핀 본체 -->
+    <path
+      d="M0 -25 C-12 -25 -22 -15 -22 -3 C-22 8 0 30 0 30 S22 8 22 -3 C22 -15 12 -25 0 -25 Z"
+      fill="url(#pinGradient)"
+      stroke="white"
+      stroke-width="2"
+    />
+    
+    <!-- 내부 원 (하트 배경) -->
+    <circle cx="0" cy="-3" r="11" fill="white" opacity="0.95" />
+    
+    <!-- 하트 아이콘 -->
+    <path
+      d="M0 -1 C0 -1 -6 -8 -6 -11 C-6 -13 -4.5 -14 -3 -14 C-1.5 -14 0 -12.5 0 -12.5 S1.5 -14 3 -14 C4.5 -14 6 -13 6 -11 C6 -8 0 -1 0 -1 Z"
+      fill="url(#heartGradient)"
+      stroke="#EC4899"
+      stroke-width="1"
+    />
+    
+    <!-- 하트 내부 하이라이트 -->
+    <circle cx="-2" cy="-10" r="1.5" fill="white" opacity="0.8" />
+  </g>
+
+  <!-- 반짝이 효과 -->
+  <g opacity="0.6">
+    <path d="M25 20 L26 22 L28 23 L26 24 L25 26 L24 24 L22 23 L24 22 Z" fill="#FBBF24" />
+    <path d="M75 65 L76 67 L78 68 L76 69 L75 71 L74 69 L72 68 L74 67 Z" fill="#FBBF24" />
+  </g>
+</svg>

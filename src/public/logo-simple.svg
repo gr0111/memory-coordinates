@@ -1,0 +1,43 @@
+<svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 메인 그라데이션 (보라→핑크) -->
+    <linearGradient id="pinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    
+    <!-- 하트 그라데이션 (밝은 핑크) -->
+    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDF2F8" />
+      <stop offset="100%" stop-color="#FCE7F3" />
+    </linearGradient>
+  </defs>
+
+  <!-- 메인 지도 핀 -->
+  <g transform="translate(50, 50)">
+    <!-- 핀 그림자 -->
+    <ellipse cx="0" cy="25" rx="10" ry="4" fill="black" opacity="0.15" />
+    
+    <!-- 핀 본체 -->
+    <path
+      d="M0 -30 C-14 -30 -26 -18 -26 -4 C-26 10 0 35 0 35 S26 10 26 -4 C26 -18 14 -30 0 -30 Z"
+      fill="url(#pinGradient)"
+      stroke="white"
+      stroke-width="3"
+    />
+    
+    <!-- 내부 원 (하트 배경) -->
+    <circle cx="0" cy="-4" r="13" fill="white" opacity="0.95" />
+    
+    <!-- 하트 아이콘 -->
+    <path
+      d="M0 -1 C0 -1 -7 -9 -7 -12.5 C-7 -15 -5 -16.5 -3.5 -16.5 C-1.5 -16.5 0 -14.5 0 -14.5 S1.5 -16.5 3.5 -16.5 C5 -16.5 7 -15 7 -12.5 C7 -9 0 -1 0 -1 Z"
+      fill="url(#heartGradient)"
+      stroke="#EC4899"
+      stroke-width="1.2"
+    />
+    
+    <!-- 하트 내부 하이라이트 -->
+    <circle cx="-2.5" cy="-11.5" r="2" fill="white" opacity="0.8" />
+  </g>
+</svg>

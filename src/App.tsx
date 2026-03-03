@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+// src/App.tsx
+import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { MapView } from "./components/MapView";
 import { TimelineView } from "./components/TimelineView";
@@ -9,7 +10,7 @@ import { AuthScreen } from "./components/AuthScreen";
 import { MyPage } from "./components/MyPage";
 import { useMemories } from "./hooks/useMemories";
 import { useAuth } from "./hooks/useAuth";
-import { Memory } from "./types/memory";
+import type { Memory } from "./types/memory";
 import { Button } from "./components/ui/button";
 import { Plus } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
@@ -24,6 +25,7 @@ export default function App() {
     logout,
     updateProfile,
   } = useAuth();
+
   const {
     memories,
     isLoading: isMemoriesLoading,
@@ -32,29 +34,21 @@ export default function App() {
     deleteMemory,
   } = useMemories();
 
-  const [selectedMemoryId, setSelectedMemoryId] =
-      useState<string | null>(null);
+  const [selectedMemoryId, setSelectedMemoryId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingMemory, setEditingMemory] =
-      useState<Memory | null>(null);
-  const [pendingLocation, setPendingLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
+  const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
+  const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [hideTutorial, setHideTutorial] = useState(false);
   const [isListExpanded, setIsListExpanded] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const [currentView, setCurrentView] = useState<
-      "map" | "timeline"
-  >("map");
+  const [currentView, setCurrentView] = useState<"map" | "timeline">("map");
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [showMyPage, setShowMyPage] = useState(false);
 
   // 신규 사용자 감지
   useEffect(() => {
-    if (user?.isNewUser && memories.length === 0) {
+    if (user && memories.length === 0) {
       setIsFirstTimeUser(true);
-      // 5초 후 애니메이션 제거
       const timer = setTimeout(() => {
         setIsFirstTimeUser(false);
       }, 5000);
@@ -79,7 +73,7 @@ export default function App() {
     return (
         <>
           <AuthScreen onLogin={login} onRegister={register} />
-          <Toaster />
+          <Toaster position="top-center" />
         </>
     );
   }
@@ -87,45 +81,41 @@ export default function App() {
   // 통계 계산
   const memoryStats = {
     totalMemories: memories.length,
-    totalTags: new Set(
-        memories.flatMap((m) => m.tags ?? [])
-    ).size,
+    totalTags: new Set(memories.flatMap((m) => m.tags ?? [])).size,
     firstMemoryDate:
         memories.length > 0
             ? [...memories].sort(
-                (a, b) =>
-                    new Date(a.date).getTime() -
-                    new Date(b.date).getTime()
+                (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
             )[0].date
             : undefined,
   };
 
-  const handleMapDoubleClick = async (
-      lat: number,
-      lng: number
-  ) => {
+  const handleMapDoubleClick = (lat: number, lng: number) => {
     setPendingLocation({ lat, lng });
     setEditingMemory(null);
     setIsFormOpen(true);
     setShowDetail(false);
-    setHideTutorial(true); // 지도 더블클릭 시 튜토리얼 숨김
+    setHideTutorial(true);
   };
 
-  const handleSaveMemory = async (
-      data: Omit<Memory, "id" | "createdAt">
-  ) => {
-    if (editingMemory) {
-      await updateMemory(editingMemory.id, data);
-      toast.success("기억이 수정되었습니다!");
-    } else {
-      const newMemory = await addMemory(data);
-      setSelectedMemoryId(newMemory.id);
-      toast.success("새로운 기억이 추가되었습니다!");
+  const handleSaveMemory = async (data: Omit<Memory, "id" | "createdAt">) => {
+    try {
+      if (editingMemory) {
+        await updateMemory(editingMemory.id, data);
+        toast.success("기억이 수정되었습니다!");
+      } else {
+        const newMemory = await addMemory(data);
+        setSelectedMemoryId(newMemory.id);
+        toast.success("새로운 기억이 추가되었습니다!");
+      }
+      setIsFormOpen(false);
+      setEditingMemory(null);
+      setPendingLocation(null);
+      setShowDetail(false);
+    } catch (e) {
+      console.error(e);
+      toast.error("기억을 저장하는 데 실패했습니다.");
     }
-    setIsFormOpen(false);
-    setEditingMemory(null);
-    setPendingLocation(null);
-    setShowDetail(false);
   };
 
   const handleEditMemory = (memory: Memory) => {
@@ -136,9 +126,15 @@ export default function App() {
   };
 
   const handleDeleteMemory = async (id: string) => {
-    await deleteMemory(id);
-    setSelectedMemoryId(null);
-    setShowDetail(false);
+    try {
+      await deleteMemory(id);
+      setSelectedMemoryId(null);
+      setShowDetail(false);
+      toast.success("기억이 삭제되었습니다.");
+    } catch (e) {
+      console.error(e);
+      toast.error("기억을 삭제하는 데 실패했습니다.");
+    }
   };
 
   const handleLogout = () => {
@@ -151,18 +147,7 @@ export default function App() {
   const handleSelectMemory = (memory: Memory) => {
     setSelectedMemoryId(memory.id);
     setShowDetail(true);
-    setHideTutorial(true); // 마커 클릭 시 튜토리얼 숨김
-  };
-
-  const handleCancelForm = () => {
-    setIsFormOpen(false);
-    setEditingMemory(null);
-    setPendingLocation(null);
-  };
-
-  const handleCloseDetail = () => {
-    setShowDetail(false);
-    setSelectedMemoryId(null);
+    setHideTutorial(true);
   };
 
   return (
@@ -190,6 +175,7 @@ export default function App() {
                       setEditingMemory(null);
                       setIsFormOpen(true);
                     }}
+                    hideTutorial={hideTutorial}
                     isFirstTimeUser={isFirstTimeUser}
                 />
 
@@ -214,8 +200,8 @@ export default function App() {
                   onSelectMemory={handleSelectMemory}
                   onEditMemory={handleEditMemory}
                   onDeleteMemory={handleDeleteMemory}
-                  onTagClick={(tag) => {
-                    // 태그 필터링 로직
+                  onTagClick={() => {
+                    // 태그 필터링 로직은 나중에
                     setCurrentView("map");
                   }}
                   onCreateMemory={() => {
@@ -238,9 +224,7 @@ export default function App() {
                 onEditMemory={handleEditMemory}
                 onDeleteMemory={handleDeleteMemory}
                 isExpanded={isListExpanded}
-                onToggleExpand={() =>
-                    setIsListExpanded(!isListExpanded)
-                }
+                onToggleExpand={() => setIsListExpanded(!isListExpanded)}
             />
         )}
 
@@ -248,9 +232,7 @@ export default function App() {
         {showDetail &&
             selectedMemoryId &&
             (() => {
-              const selectedMemory = memories.find(
-                  (m) => m.id === selectedMemoryId
-              );
+              const selectedMemory = memories.find((m) => m.id === selectedMemoryId);
               if (!selectedMemory) return null;
 
               return (
@@ -261,13 +243,10 @@ export default function App() {
                         setSelectedMemoryId(null);
                       }}
                       onEdit={() => handleEditMemory(selectedMemory)}
-                      onDelete={() =>
-                          handleDeleteMemory(selectedMemoryId)
-                      }
-                      onTagClick={(tag) => {
+                      onDelete={() => handleDeleteMemory(selectedMemoryId)}
+                      onTagClick={() => {
                         setShowDetail(false);
                         setSelectedMemoryId(null);
-                        // 태그 필터링 로직은 여기에 추가
                       }}
                   />
               );
@@ -279,11 +258,7 @@ export default function App() {
                 memory={editingMemory}
                 initialLat={pendingLocation?.lat}
                 initialLng={pendingLocation?.lng}
-                initialAddress={
-                  pendingLocation
-                      ? undefined
-                      : editingMemory?.address
-                }
+                initialAddress={pendingLocation ? undefined : editingMemory?.address}
                 onSave={handleSaveMemory}
                 onCancel={() => {
                   setIsFormOpen(false);
@@ -296,7 +271,12 @@ export default function App() {
         {/* 마이페이지 */}
         {showMyPage && (
             <MyPage
-                user={user}
+                user={{
+                  email: user.email,
+                  name: user.name,
+                  profileImage: user.profileImage,
+                  bio: user.bio,
+                }}
                 onUpdateProfile={updateProfile}
                 onClose={() => setShowMyPage(false)}
                 memoryStats={memoryStats}

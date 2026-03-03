@@ -5,10 +5,7 @@ function getAuthToken() {
     return localStorage.getItem("memory-map-token");
 }
 
-export async function api<T>(
-    path: string,
-    options: RequestInit = {}
-): Promise<T> {
+export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
     const token = getAuthToken();
     const headers: HeadersInit = {
         "Content-Type": "application/json",

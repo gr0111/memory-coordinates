@@ -7,22 +7,22 @@ import { Label } from "./ui/label";
 import { TAG_OPTIONS } from "../types/memory";
 import { TagIcon } from "./TagIcon";
 import { Logo } from "./Logo";
-import { MapPin, Mail, Lock, User, Heart, Sparkles } from "lucide-react";
+import { Heart, Mail, Lock, User, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
-  onLogin: (email: string, name: string, isNewUser?: boolean) => void;
+  onLogin: (email: string, password: string) => Promise<void> | void;
+  onRegister: (name: string, email: string, password: string) => Promise<void> | void;
 };
 
-const USERS_KEY = "memory-map-users";
-
-export function AuthScreen({ onLogin }: Props) {
+export function AuthScreen({ onLogin, onRegister }: Props) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!email.trim() || !password.trim()) {
@@ -35,36 +35,32 @@ export function AuthScreen({ onLogin }: Props) {
       return;
     }
 
-    // users “DB” 읽기
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "{}") as Record<
-        string,
-        { password: string; name: string }
-    >;
+    setIsSubmitting(true);
+    try {
+      if (isLogin) {
+        await onLogin(email.trim(), password);
+        toast.success("환영합니다! ✨");
+      } else {
+        await onRegister(name.trim(), email.trim(), password);
+        toast.success(`회원가입이 완료되었습니다. 환영해요, ${name.trim()}님! 🎉`);
+      }
+    } catch (err: any) {
+      let message = "요청 처리에 실패했어요.";
 
-    if (isLogin) {
-      // 로그인
-      const user = users[email];
-      if (!user) {
-        toast.error("등록되지 않은 이메일입니다.");
-        return;
+      if (err?.message) {
+        try {
+          const parsed = JSON.parse(err.message);
+          if (parsed?.message) {
+            message = parsed.message;
+          }
+        } catch {
+          message = err.message;
+        }
       }
-      if (user.password !== password) {
-        toast.error("비밀번호가 일치하지 않습니다.");
-        return;
-      }
-      toast.success(`환영합니다, ${user.name}님! 🎉`);
-      onLogin(email, user.name, false);
-    } else {
-      // 회원가입
-      if (users[email]) {
-        toast.error("이미 등록된 이메일입니다.");
-        return;
-      }
-      users[email] = { password, name };
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
-      toast.success(`회원가입이 완료되었습니다. 환영해요, ${name}님! 🎉`);
-      onLogin(email, name, true);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -170,9 +166,10 @@ export function AuthScreen({ onLogin }: Props) {
 
               <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-full mt-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg"
               >
-                {isLogin ? "로그인" : "회원가입"}
+                {isSubmitting ? "처리 중..." : isLogin ? "로그인" : "회원가입"}
               </Button>
             </form>
 
@@ -181,10 +178,7 @@ export function AuthScreen({ onLogin }: Props) {
               <p>기억들이 기다리고 있어요 ✨</p>
               <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-1">
                 {TAG_OPTIONS.map((tag) => (
-                    <span
-                        key={tag.value}
-                        className="flex items-center gap-1.5 text-xs"
-                    >
+                    <span key={tag.value} className="flex items-center gap-1.5 text-xs">
                   <TagIcon iconName={tag.icon} className="size-3.5" />
                   <span>{tag.label}</span>
                 </span>

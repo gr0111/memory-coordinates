@@ -1,59 +1,124 @@
 // src/hooks/useMemories.ts
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Memory } from "../types/memory";
+import { api } from "../lib/api";
 
-const STORAGE_KEY = "memory-map-memories";
+// 서버가 주는 DTO 타입 (memory.service.ts 기준)
+type ServerMemory = {
+  id: number;
+  title: string;
+  memo?: string;
+  date: string;
+  tags: string[];
+  lat: number;
+  lng: number;
+  addressText?: string;
+  fullAddress?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ListMemoriesResponse = { memories: ServerMemory[] };
+type MemoryResponse = { memory: ServerMemory };
+
+function fromServer(memory: ServerMemory): Memory {
+  return {
+    id: String(memory.id),
+    title: memory.title,
+    description: memory.memo,
+    date: memory.date,
+    tags: memory.tags,
+    lat: memory.lat,
+    lng: memory.lng,
+    address: memory.fullAddress ?? memory.addressText,
+    // placeName / shortLocation / photo 는 서버에 없음
+    placeName: undefined,
+    shortLocation: undefined,
+    photo: undefined,
+    createdAt: memory.createdAt,
+  };
+}
+
+function toCreateBody(m: Omit<Memory, "id" | "createdAt">) {
+  return {
+    title: m.title,
+    memo: m.description,
+    date: m.date,
+    tags: m.tags,
+    lat: m.lat,
+    lng: m.lng,
+    addressText: m.address,
+    fullAddress: m.address,
+  };
+}
+
+function toUpdateBody(m: Partial<Memory>) {
+  const body: any = {};
+
+  if (m.title !== undefined) body.title = m.title;
+  if (m.description !== undefined) body.memo = m.description;
+  if (m.date !== undefined) body.date = m.date;
+  if (m.tags !== undefined) body.tags = m.tags;
+  if (m.lat !== undefined) body.lat = m.lat;
+  if (m.lng !== undefined) body.lng = m.lng;
+  if (m.address !== undefined) {
+    body.addressText = m.address;
+    body.fullAddress = m.address;
+  }
+
+  return body;
+}
 
 export function useMemories() {
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 1) 처음 마운트될 때 localStorage에서 불러오기
+  // 1) 최초 로드: 서버에서 가져오기
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-
-      const parsed: Memory[] = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        setMemories(parsed);
+    const fetchMemories = async () => {
+      try {
+        const res = await api<ListMemoriesResponse>("/memories");
+        setMemories(res.memories.map(fromServer));
+      } catch (e) {
+        console.error("Failed to fetch memories:", e);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to parse memories from localStorage:", error);
-    }
-  }, []);
-
-  // 2) memories 변경될 때마다 localStorage에 저장
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
-    } catch (error) {
-      console.error("Failed to save memories to localStorage:", error);
-    }
-  }, [memories]);
-
-  // 3) 새 기억 추가
-  const addMemory = (m: Omit<Memory, "id" | "createdAt">): Memory => {
-    const newMemory: Memory = {
-      ...m,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
     };
 
+    void fetchMemories();
+  }, []);
+
+  // 2) 새 기억 추가
+  const addMemory = async (m: Omit<Memory, "id" | "createdAt">): Promise<Memory> => {
+    const res = await api<MemoryResponse>("/memories", {
+      method: "POST",
+      body: JSON.stringify(toCreateBody(m)),
+    });
+
+    const newMemory = fromServer(res.memory);
     setMemories((prev) => [newMemory, ...prev]);
     return newMemory;
   };
 
-  // 4) 기존 기억 수정
-  const updateMemory = (id: string, data: Partial<Memory>) => {
-    setMemories((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, ...data } : m)),
-    );
+  // 3) 기존 기억 수정
+  const updateMemory = async (id: string, data: Partial<Memory>) => {
+    const body = toUpdateBody(data);
+
+    const res = await api<MemoryResponse>(`/memories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+
+    const updated = fromServer(res.memory);
+    setMemories((prev) => prev.map((m) => (m.id === id ? updated : m)));
   };
 
-  // 5) 기억 삭제
-  const deleteMemory = (id: string) => {
+  // 4) 기억 삭제
+  const deleteMemory = async (id: string) => {
+    await api<{}>(`/memories/${id}`, { method: "DELETE" });
     setMemories((prev) => prev.filter((m) => m.id !== id));
   };
 
-  return { memories, addMemory, updateMemory, deleteMemory };
+  return { memories, isLoading, addMemory, updateMemory, deleteMemory };
 }

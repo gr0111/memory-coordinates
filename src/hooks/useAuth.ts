@@ -1,74 +1,154 @@
 // src/hooks/useAuth.ts
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { api } from "../lib/api";
 
 export type User = {
-  email: string;
+  id: number;
   name: string;
+  email: string;
   profileImage?: string;
   bio?: string;
-  isNewUser?: boolean;
 };
 
-const CURRENT_USER_KEY = "memory-map-current-user";
-const USERS_KEY = "memory-map-users";
+const TOKEN_KEY = "memory-map-token";
+const PROFILE_KEY_PREFIX = "memory-map-profile:";
 
-/**
- * localStorage 기반 간단 로그인 훅
- * - users: { [email]: { password, name } }
- * - current user: { email, name, profileImage?, bio?, isNewUser? }
- */
+type ServerUser = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+type MeResponse = { user: ServerUser };
+type AuthResponse = { user: ServerUser; token: string };
+
+function loadProfile(email: string): Pick<User, "name" | "profileImage" | "bio"> {
+  try {
+    const raw = localStorage.getItem(`${PROFILE_KEY_PREFIX}${email}`);
+    if (!raw) return { name: "", profileImage: undefined, bio: undefined };
+    const parsed = JSON.parse(raw) as { name?: string; profileImage?: string; bio?: string };
+    return {
+      name: parsed.name ?? "",
+      profileImage: parsed.profileImage,
+      bio: parsed.bio,
+    };
+  } catch {
+    return { name: "", profileImage: undefined, bio: undefined };
+  }
+}
+
+function saveProfile(email: string, profile: { name?: string; profileImage?: string; bio?: string }) {
+  try {
+    localStorage.setItem(
+        `${PROFILE_KEY_PREFIX}${email}`,
+        JSON.stringify({
+          name: profile.name ?? "",
+          profileImage: profile.profileImage,
+          bio: profile.bio,
+        }),
+    );
+  } catch (e) {
+    console.error("Failed to save profile", e);
+  }
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 앱 시작 시 localStorage에서 현재 사용자 복원
+  // 앱 시작 시 토큰이 있으면 /auth/me로 복원
   useEffect(() => {
-    try {
-      const currentUser = localStorage.getItem(CURRENT_USER_KEY);
-      if (currentUser) {
-        setUser(JSON.parse(currentUser));
+    const init = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
-    } catch (e) {
-      console.error("Failed to parse current user", e);
-    } finally {
-      setIsLoading(false);
-    }
+
+      try {
+        const res = await api<MeResponse>("/auth/me");
+        const profile = loadProfile(res.user.email);
+        setUser({
+          id: res.user.id,
+          email: res.user.email,
+          name: profile.name || res.user.name,
+          profileImage: profile.profileImage,
+          bio: profile.bio,
+        });
+      } catch (e) {
+        console.error("Failed to restore session", e);
+        localStorage.removeItem(TOKEN_KEY);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void init();
   }, []);
 
-  // 로그인: AuthScreen에서 이메일/이름 넘겨줌
-  const login = (email: string, name: string, isNewUser: boolean = false) => {
-    const userData: User = { email, name, isNewUser };
-    setUser(userData);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userData));
+  // 로그인
+  const login = async (email: string, password: string) => {
+    const { user: serverUser, token } = await api<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    localStorage.setItem(TOKEN_KEY, token);
+
+    const profile = loadProfile(serverUser.email);
+    setUser({
+      id: serverUser.id,
+      email: serverUser.email,
+      name: profile.name || serverUser.name,
+      profileImage: profile.profileImage,
+      bio: profile.bio,
+    });
+  };
+
+  // 회원가입
+  const register = async (name: string, email: string, password: string) => {
+    const { user: serverUser, token } = await api<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password }),
+    });
+    localStorage.setItem(TOKEN_KEY, token);
+
+    // 초기 프로필 저장
+    saveProfile(email, { name });
+
+    setUser({
+      id: serverUser.id,
+      email: serverUser.email,
+      name,
+      profileImage: undefined,
+      bio: undefined,
+    });
   };
 
   const logout = () => {
+    localStorage.removeItem(TOKEN_KEY);
     setUser(null);
-    localStorage.removeItem(CURRENT_USER_KEY);
   };
 
-  const updateProfile = (updates: Partial<Omit<User, "email">>) => {
-    if (!user) return;
+  // 이름/프로필/소개는 로컬에서만 관리 (백엔드 라우트 없음)
+  const updateProfile = (updates: Partial<Omit<User, "id" | "email">>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
 
-    const updatedUser: User = { ...user, ...updates, isNewUser: false };
-    setUser(updatedUser);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+      const next: User = {
+        ...prev,
+        ...updates,
+      };
 
-    // users “DB”도 같이 갱신
-    try {
-      const users = JSON.parse(localStorage.getItem(USERS_KEY) || "{}");
-      if (users[user.email]) {
-        users[user.email] = {
-          ...users[user.email],
-          name: updatedUser.name,
-          // 비밀번호는 그대로 두고 이름/프로필만 갱신
-        };
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      }
-    } catch (e) {
-      console.error("Failed to update users DB", e);
-    }
+      saveProfile(prev.email, {
+        name: next.name,
+        profileImage: next.profileImage,
+        bio: next.bio,
+      });
+
+      return next;
+    });
   };
 
-  return { user, isLoading, login, logout, updateProfile };
+  return { user, isLoading, login, register, logout, updateProfile };
 }

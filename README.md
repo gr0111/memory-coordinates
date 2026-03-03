@@ -121,7 +121,6 @@ npm run dev
 ### 2️⃣ Client
 
 ``` bash
-cd client
 npm install
 npm run dev
 ```

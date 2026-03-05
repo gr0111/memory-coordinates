@@ -1,4 +1,4 @@
-<img width="1841" height="1706" alt="image" src="https://github.com/user-attachments/assets/ee716731-0471-47fd-b401-45d5de51de63" /># 📍 기억의 좌표 (Memory Coordinates)
+# 📍 기억의 좌표 (Memory Coordinates)
 
 > 기억이 머문 자리를 지도 위에 기록하는 풀스택 웹 애플리케이션
 

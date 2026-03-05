@@ -143,26 +143,20 @@ npm run dev
 ## ScreenShot
 
 - 회원가입/로그인
-<img width="439" height="853" alt="image" src="https://github.com/user-attachments/assets/e7db52bd-1d42-4e24-8938-b1be1cfd8b2c" />
-<img width="439" height="853" alt="image" src="https://github.com/user-attachments/assets/e7b5a0b3-fd50-448e-8a91-831c295ced6f" />
+<img width="1841" height="1706" alt="image" src="https://github.com/user-attachments/assets/38d060fc-37d3-4b57-bcc4-481a256cde50" />
 
 - 지도
-<img width="395" height="853" alt="image" src="https://github.com/user-attachments/assets/a2b2484a-6d54-4269-851c-45093a901202" />
-<img width="471" height="918" alt="image" src="https://github.com/user-attachments/assets/371d737e-b50e-4cc3-a74c-7cbda4e8a506" />
+<img width="1829" height="1836" alt="image" src="https://github.com/user-attachments/assets/1e23ad9d-04aa-4e1e-8aff-b4e4765d2a3e" />
 
 - 기억 추가 모달 창
-<img width="471" height="916" alt="image" src="https://github.com/user-attachments/assets/977939cd-788e-48e4-bf48-7fae03969a8d" />
-<img width="471" height="916" alt="image" src="https://github.com/user-attachments/assets/c3f34afb-2c92-4eae-8992-e553a7d9b850" />
-<img width="940" height="1830" alt="image" src="https://github.com/user-attachments/assets/af22c359-aa45-4f10-a16a-5c6a818fc596" />
+<img width="2868" height="1832" alt="image" src="https://github.com/user-attachments/assets/e6804674-37f5-4b3d-88a5-4436b5a37bc0" />
 
 - 타임라인
-<img width="394" height="853" alt="image" src="https://github.com/user-attachments/assets/0ac3ff0b-2cd1-4167-9332-ab68405fe43c" />
-<img width="788" height="1704" alt="image" src="https://github.com/user-attachments/assets/c87b235d-fb97-4597-8fb5-8ad0ec470e0a" />
-<img width="394" height="853" alt="image" src="https://github.com/user-attachments/assets/e35bce4f-11d5-4937-be52-032dba1cc82b" />
+<img width="2716" height="1706" alt="image" src="https://github.com/user-attachments/assets/bc5d81ff-0e48-4328-8621-a4f64290a706" />
 
 - 마이페이지
-<img width="470" height="917" alt="image" src="https://github.com/user-attachments/assets/40ed8433-9aa2-475c-841d-92b8f2f66320" />
-<img width="470" height="917" alt="image" src="https://github.com/user-attachments/assets/37af90f9-3093-4cea-8f53-b674786e331f" />
+<img width="1904" height="1834" alt="image" src="https://github.com/user-attachments/assets/35179288-5ed4-4967-854d-9aae748e59bb" />
+
 
 
 
